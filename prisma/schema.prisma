@@ -1,0 +1,181 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRol {
+  ADMIN
+  USER
+}
+
+model User {
+  id       String  @id @default(uuid())
+  name     String
+  userName String  @unique
+  password String
+  rol      UserRol @default(USER)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  WeightHistory WeightHistory[]
+  Owner         Owner[]
+}
+
+model Animal {
+  id                          Int      @id @default(autoincrement())
+  initialWeight               Float
+  gender                      Boolean  @map(name: "genero")
+  animalCode                  String   @map(name: "codigo_animal")
+  isAlive                     Boolean  @default(true)
+  functionalCurrencyBuyPrice  Float?   @default(0) @map(name: "precio_de_compra_moneda_funcional")
+  functionalCurrencySellPrice Float?   @default(0) @map(name: "precio_de_venta_moneda_funcional")
+  differentiatedTreatment     String?  @map(name: "tratamiento_diferenciado")
+  localCurrencyBuyPrice       Float?   @default(0) @map(name: "precio_de_compra_moneda_local")
+  localCurrencySellPrice      Float?   @default(0) @map(name: "precio_de_venta_moneda_local")
+  reasonForRemoval            String?  @map(name: "razon_de_baja")
+  birthdate                   DateTime
+
+  species   Species @relation(fields: [speciesId], references: [id])
+  speciesId Int
+
+  location            Location @relation(fields: [locationId_location], references: [id_location])
+  locationId_location Int
+
+  weighingHistory  WeightHistory[]
+  Owner            Owner[]
+  pregnancyHistory PregnancyHistory[]
+  Origin           Origin[]
+  Pregnancy        Pregnancy?
+  litters          Litters[]
+  Fertility        Fertility?
+  MatingHistory    MatingHistory[]
+}
+
+model WeightHistory {
+  id_weight_history Int      @id @default(autoincrement())
+  date              DateTime @default(now())
+  weight            Float
+  comment           String   @default("Ninguna")
+  isActive          Boolean  @default(true)
+  ageMonths         Int
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  animal   Animal @relation(fields: [animalId], references: [id])
+  animalId Int
+}
+
+model Owner {
+  id         Int    @id @default(autoincrement())
+  percentage Float?
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  animal   Animal @relation(fields: [animalId], references: [id])
+  animalId Int
+}
+
+model PregnancyHistory {
+  id   Int      @id @default(autoincrement())
+  data String
+  time Int?     @default(0)
+  date DateTime @default(now())
+
+  animal   Animal @relation(fields: [animalId], references: [id])
+  animalId Int
+}
+
+model Pregnancy {
+  id         Int      @id @default(autoincrement())
+  isPregnant Boolean  @default(false)
+  date       DateTime @default(now())
+
+  animals  Animal @relation(fields: [animalId], references: [id])
+  animalId Int    @unique
+}
+
+model Origin {
+  id_origin Int     @id @default(autoincrement())
+  female    String?
+  male      String?
+
+  animal   Animal @relation(fields: [animalId], references: [id])
+  animalId Int
+
+  location            Location @relation(fields: [locationId_location], references: [id_location])
+  locationId_location Int
+}
+
+model Location {
+  id_location Int    @id @default(autoincrement())
+  location    String
+
+  Origin Origin[]
+  Animal Animal[]
+}
+
+model Species {
+  id              Int     @id @default(autoincrement())
+  species         String
+  gestationTime   String  @map(name: "tiempo_de_gestacion")
+  avgWeightFemale String? @map(name: "peso_medio_hembra")
+  avgWeightMale   String? @map(name: "peso_medio_macho")
+  avgPricePerKilo Float?  @map(name: "precio_por_kilo_promedio")
+  soldKilos       Float?  @map(name: "kilos_vendidos")
+
+  animals Animal[]
+}
+
+model Fertility {
+  id              Int     @id @default(autoincrement())
+  fertilityStatus Boolean @default(false)
+  fertilityReason String? @default("Muy joven")
+
+  animal   Animal @relation(fields: [animalId], references: [id])
+  animalId Int    @unique
+}
+
+model MatingHistory {
+  id         Int      @id @default(autoincrement())
+  matingDate DateTime @default(now())
+  result     Boolean  @default(true)
+
+  animal   Animal @relation(fields: [animalId], references: [id])
+  animalId Int
+}
+
+model Litters {
+  id    Int      @id @default(autoincrement())
+  alive Int?     @default(0)
+  dead  Int?     @default(0)
+  date  DateTime @default(now())
+
+  animal   Animal @relation(fields: [animalId], references: [id])
+  animalId Int
+}
+
+model ExchangeRate {
+  id              Int      @id @default(autoincrement())
+  dollarToColones Float?   @map(name: "de_dolar_a_colones")
+  updatedAt       DateTime @default(now()) @updatedAt
+}
+
+// model CreationEditionOfUser {
+//   id           Int       @id @default(autoincrement())
+//   creationDate DateTime  @map(name: "fecha_de_creacion")
+//   lastEdition  DateTime? @map(name: "ultima_edicion")
+// }

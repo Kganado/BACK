@@ -1,0 +1,29 @@
+version: '4'
+
+services:
+
+  app-ganado:
+    depends_on:
+      - ganado-db
+    build: ./
+    ports:
+      - ${PORT}:${PORT}
+    volumes:
+      - ./src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:123456@ganado-db:5432/ganadodb?schema=public
+
+  ganado-db:
+    container_name: ganado_database
+    image: postgres:16.2
+    restart: always
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=ganadodb
